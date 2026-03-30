@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Grow - Painel de consulta de fichas de parceiros integrado ao Sankhya ERP">
+    <title>Grow — Ficha Parceiro</title>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Favicon emoji fallback -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌱</text></svg>">
+</head>
+<body>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <div class="app-container">
+
+        <!-- ====== HEADER ====== -->
+        <header class="header" id="header">
+            <div class="header-brand">
+                <div class="header-logo">G</div>
+                <div>
+                    <h1 class="header-title">Grow</h1>
+                    <p class="header-subtitle">Ficha de Parceiro — Sankhya</p>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <div id="status-badge" class="status-badge offline">
+                    <span id="status-dot" class="status-dot"></span>
+                    <span id="status-text">Desconectado</span>
+                </div>
+
+                <button id="btn-login" class="btn btn-primary" onclick="doLogin()">
+                    🔌 Conectar
+                </button>
+
+                <button id="btn-logout" class="btn btn-danger" onclick="doLogout()" style="display:none;">
+                    ⏻ Sair
+                </button>
+            </div>
+        </header>
+
+        <!-- ====== SEARCH SECTION ====== -->
+        <section class="search-section" id="search-section">
+            <div class="search-section-title">🔎 Pesquisa de Parceiro</div>
+            <div class="search-row">
+                <div class="search-field" style="max-width: 200px;">
+                    <label for="search-type">Pesquisar por</label>
+                    <select id="search-type" disabled>
+                        <option value="CODPARC">Código</option>
+                        <option value="NOMEPARC" selected>Nome / Razão Social</option>
+                        <option value="CGC_CPF">CPF / CNPJ</option>
+                    </select>
+                </div>
+
+                <div class="search-field">
+                    <label for="search-value">Valor da pesquisa</label>
+                    <input
+                        type="text"
+                        id="search-value"
+                        placeholder="Digite o código, nome ou documento..."
+                        disabled
+                        autocomplete="off"
+                    >
+                </div>
+
+                <button id="btn-search" class="btn btn-primary" onclick="searchPartner()" disabled>
+                    Buscar
+                </button>
+            </div>
+        </section>
+
+        <!-- ====== RESULTS SECTION ====== -->
+        <section class="results-section" id="results-section">
+            <div class="results-header">
+                <div id="results-count" class="results-count"></div>
+            </div>
+
+            <div id="results-container">
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔍</div>
+                    <h3 class="empty-state-title">Pesquise um parceiro</h3>
+                    <p class="empty-state-description">
+                        Conecte-se ao Sankhya e utilize a barra de pesquisa para buscar dados de parceiros.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Scripts: config DEVE vir antes do app -->
+    <script src="js/config.js"></script>
+    <script src="js/app.js"></script>
+
+</body>
+</html>
