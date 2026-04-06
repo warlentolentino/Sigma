@@ -116,7 +116,8 @@ const server = http.createServer((req, res) => {
     }
 
     // ---- STATIC FILES: serve os arquivos do projeto ----
-    let filePath = req.url === '/' ? '/index.html' : req.url;
+    const parsedUrl = req.url.split('?')[0];
+    let filePath = parsedUrl === '/' ? '/index.html' : parsedUrl;
     filePath = path.join(__dirname, filePath);
 
     const ext = path.extname(filePath);

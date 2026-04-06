@@ -105,7 +105,9 @@ async function doLogin() {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        const responseText = await response.text();
+        const arrayBuffer = await response.arrayBuffer();
+        const decoder = new TextDecoder('iso-8859-1');
+        const responseText = decoder.decode(arrayBuffer);
 
         // Verifica se o login foi bem sucedido
         if (responseText.includes('statusMessage') && responseText.includes('erro')) {
@@ -115,7 +117,6 @@ async function doLogin() {
 
         App.isLoggedIn = true;
         updateConnectionStatus(true);
-        showToast('success', 'Login realizado com sucesso!');
         enableSearch(true);
         return true;
 
@@ -184,7 +185,9 @@ async function executeQuery(sql) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        const responseText = await response.text();
+        const arrayBuffer = await response.arrayBuffer();
+        const decoder = new TextDecoder('iso-8859-1');
+        const responseText = decoder.decode(arrayBuffer);
         console.log('Resposta bruta do Sankhya:', responseText);
 
         // Tenta parsear como JSON primeiro
@@ -275,7 +278,7 @@ function parseXmlDbExplorer(xmlDoc) {
         // Procura qualquer elemento com dados tabulares
         const allElements = xmlDoc.querySelectorAll('responseBody *');
         console.log('Elementos no responseBody:', allElements.length);
-        
+
         // Log para debug
         const responseBody = xmlDoc.querySelector('responseBody');
         if (responseBody) {
@@ -328,23 +331,18 @@ async function searchPartner() {
         SELECT 
             PAR.CODPARC,
             PAR.NOMEPARC,
-            PAR.RAZAOSOCIAL,
-            PAR.CGC_CPF,
-            PAR.TIPPESSOA,
+            PAR.CGCCPF,
             PAR.TELEFONE,
+            PAR.CELULAR,
             PAR.EMAIL,
             CID.NOMECID,
-            UFS.UF,
-            PAR.ATIVO,
-            PAR.LIMCRED,
-            PAR.CODVEND,
-            VEN.APELIDO AS VENDEDOR
-        FROM TGFPAR PAR
-        LEFT JOIN TSICID CID ON PAR.CODCID = CID.CODCID
-        LEFT JOIN TSIUFS UFS ON CID.UF = UFS.CODUF
-        LEFT JOIN TGFVEN VEN ON PAR.CODVEND = VEN.CODVEND
+            CID.UF,
+            PAR.LIMCREDITO
+        FROM GROWPRD.TGFPAR PAR
+        LEFT JOIN GROWPRD.TSICID CID ON PAR.CODCID = CID.CODCID
         WHERE ${whereClause}
         ORDER BY PAR.NOMEPARC
+
     `.trim();
 
     // Mostra loading
@@ -415,20 +413,22 @@ function renderResults(data) {
 
     // Renderiza como cards
     const cardsHtml = rows.map((row, index) => {
-        const nome = row.NOMEPARC || row.RAZAOSOCIAL || '—';
+        const nome = row.NOMEPARC || '—';
         const codparc = row.CODPARC || '—';
-        const cgc = formatCpfCnpj(row.CGC_CPF) || '—';
-        const tipo = row.TIPPESSOA === 'J' ? 'Pessoa Jurídica' : row.TIPPESSOA === 'F' ? 'Pessoa Física' : '—';
-        const telefone = row.TELEFONE || '—';
+        const cgc = formatCpfCnpj(row.CGCCPF) || '—';
+        
+        const telFmt = formatPhone(row.TELEFONE);
+        const celFmt = formatPhone(row.CELULAR);
+        const contatosStr = [telFmt, celFmt].filter(Boolean).join(' / ') || '—';
+
         const email = row.EMAIL || '—';
         const cidade = row.NOMECID || '—';
         const uf = row.UF || '—';
-        const ativo = row.ATIVO === 'S' ? '🟢 Ativo' : row.ATIVO === 'N' ? '🔴 Inativo' : '—';
-        const limCred = row.LIMCRED ? formatCurrency(row.LIMCRED) : '—';
-        const vendedor = row.VENDEDOR || '—';
+        const limCred = row.LIMCREDITO ? formatCurrency(row.LIMCREDITO) : '—';
 
+        const safeNome = nome.replace(/'/g, "\\'").replace(/"/g, "&quot;");
         return `
-            <div class="data-card" style="animation-delay: ${index * 0.08}s">
+            <div class="data-card" style="animation-delay: ${index * 0.08}s; cursor: pointer;" onclick="openFichaModal('${codparc}', '${safeNome}')" title="Clique para abrir a Ficha Completa">
                 <div class="data-card-header">
                     <div>
                         <div class="data-card-title">${escapeHtml(nome)}</div>
@@ -437,16 +437,12 @@ function renderResults(data) {
                 </div>
                 <div class="data-card-body">
                     <div class="data-row">
-                        <span class="data-label">Tipo</span>
-                        <span class="data-value">${tipo}</span>
-                    </div>
-                    <div class="data-row">
                         <span class="data-label">CPF/CNPJ</span>
                         <span class="data-value">${cgc}</span>
                     </div>
                     <div class="data-row">
-                        <span class="data-label">Telefone</span>
-                        <span class="data-value">${escapeHtml(telefone)}</span>
+                        <span class="data-label">Contatos</span>
+                        <span class="data-value">${contatosStr}</span>
                     </div>
                     <div class="data-row">
                         <span class="data-label">E-mail</span>
@@ -457,16 +453,8 @@ function renderResults(data) {
                         <span class="data-value">${escapeHtml(cidade)} / ${escapeHtml(uf)}</span>
                     </div>
                     <div class="data-row">
-                        <span class="data-label">Status</span>
-                        <span class="data-value">${ativo}</span>
-                    </div>
-                    <div class="data-row">
                         <span class="data-label">Lim. Crédito</span>
                         <span class="data-value">${limCred}</span>
-                    </div>
-                    <div class="data-row">
-                        <span class="data-label">Vendedor</span>
-                        <span class="data-value">${escapeHtml(vendedor)}</span>
                     </div>
                 </div>
             </div>
@@ -528,6 +516,17 @@ function formatCpfCnpj(value) {
     return value;
 }
 
+function formatPhone(val) {
+    if (!val || val === '—' || val === '-') return '';
+    let digits = String(val).replace(/\D/g, '');
+    if (digits.length === 11) {
+        return `(${digits.substring(0,2)}) ${digits.substring(2,7)}-${digits.substring(7)}`;
+    } else if (digits.length === 10) {
+        return `(${digits.substring(0,2)}) ${digits.substring(2,6)}-${digits.substring(6)}`;
+    }
+    return String(val).trim();
+}
+
 function formatCurrency(value) {
     const num = parseFloat(value);
     if (isNaN(num)) return value;
@@ -545,6 +544,30 @@ document.addEventListener('DOMContentLoaded', () => {
     updateConnectionStatus(false);
     enableSearch(false);
     clearResults();
+
+    // Iniciar sessão Sankhya logo no load
+    doLogin().then(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlCodParc = urlParams.get('codparc');
+        if (urlCodParc) {
+            const typeEl = document.getElementById('search-type');
+            const valEl = document.getElementById('search-value');
+            if (typeEl && valEl) {
+                typeEl.value = 'CODPARC';
+                valEl.value = urlCodParc;
+                // Dispara a pesquisa e já abre o card após renderizar
+                searchPartner().then(() => {
+                    // Timeout pequeno para garantir a injeção no DOM do card HTML
+                    setTimeout(() => {
+                        const firstCard = document.querySelector('.data-card');
+                        if (firstCard) {
+                            firstCard.click();
+                        }
+                    }, 100);
+                });
+            }
+        }
+    });
 
     // Enter na pesquisa
     const searchInput = document.getElementById('search-value');

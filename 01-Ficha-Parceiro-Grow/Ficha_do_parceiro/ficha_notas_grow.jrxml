@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ficha_notas_grow" language="groovy" pageWidth="200" pageHeight="345" whenNoDataType="AllSectionsNoDetail" columnWidth="200" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0">
+	<property name="ireport.zoom" value="2.5937424601000028"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<style name="zebra">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[$V{COLUMN_COUNT}%2==0]]></conditionExpression>
+			<style mode="Opaque" backcolor="#FFFFFF"/>
+		</conditionalStyle>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[$V{COLUMN_COUNT}%2!=0]]></conditionExpression>
+			<style mode="Opaque" backcolor="#CCCCCC"/>
+		</conditionalStyle>
+	</style>
+	<parameter name="CODPARC" class="java.math.BigDecimal">
+		<parameterDescription><![CDATA[Cód. Parceiro]]></parameterDescription>
+	</parameter>
+	<queryString>
+		<![CDATA[
+SELECT *
+  FROM(
+SELECT *
+  FROM(
+    SELECT  'MOTO ARTE' AS EMPRESA
+          , TGFCAB.DTNEG
+          , TGFCAB.NUMNOTA
+          , TGFCAB.VLRNOTA
+       FROM MOTOPRD.TGFCAB
+      WHERE TGFCAB.CODTIPOPER = 901
+        AND TGFCAB.CODPARC IN((SELECT CODARTE FROM TABLE(GROWPRD.AD_GET_PARCEIROS_ERP($P{CODPARC}))))
+        AND TGFCAB.STATUSNOTA = 'L'
+
+
+
+    UNION ALL
+
+    SELECT  'MOTO UAI' AS EMPRESA
+          , TGFCAB.DTNEG
+          , TGFCAB.NUMNOTA
+          , TGFCAB.VLRNOTA
+       FROM RAJAPRD.TGFCAB
+      WHERE TGFCAB.CODTIPOPER = 901
+        AND TGFCAB.CODPARC IN((SELECT CODUAI FROM TABLE(GROWPRD.AD_GET_PARCEIROS_ERP($P{CODPARC}))))
+        AND TGFCAB.STATUSNOTA = 'L'
+
+
+    UNION ALL
+
+    SELECT 'MOTO FEST' AS EMPRESA
+         , FEST.DTNEG
+         , FEST.NUMNOTA AS NUMNOTA
+         , SUM(FEST.VLRTOT) AS VLRNOTA
+  FROM GROWPRD.FATFEST FEST
+  WHERE CODPARC = $P{CODPARC}
+  GROUP BY FEST.DTNEG
+         , FEST.NUMNOTA
+
+)SUB
+ORDER BY DTNEG DESC
+FETCH NEXT 20 ROWS ONLY
+)SUB2
+ORDER BY EMPRESA, DTNEG DESC]]>
+	</queryString>
+	<field name="EMPRESA" class="java.lang.String"/>
+	<field name="DTNEG" class="java.sql.Timestamp"/>
+	<field name="NUMNOTA" class="java.math.BigDecimal"/>
+	<field name="VLRNOTA" class="java.math.BigDecimal"/>
+	<group name="EMPRESA">
+		<groupExpression><![CDATA[$F{EMPRESA}]]></groupExpression>
+		<groupHeader>
+			<band height="26">
+				<staticText>
+					<reportElement x="0" y="13" width="68" height="13"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Dt. Emissão]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="68" y="13" width="71" height="13"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Nro. Nota]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="139" y="13" width="56" height="13"/>
+					<box rightPadding="5">
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Vlr. Nota]]></text>
+				</staticText>
+				<textField>
+					<reportElement mode="Opaque" x="0" y="0" width="195" height="13" backcolor="#CCCCCC"/>
+					<box leftPadding="0">
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{EMPRESA}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+	</group>
+	<title>
+		<band height="20" splitType="Stretch">
+			<staticText>
+				<reportElement mode="Opaque" x="0" y="7" width="195" height="13" forecolor="#FFFFFF" backcolor="#666666"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Últimas Compras]]></text>
+			</staticText>
+		</band>
+	</title>
+	<detail>
+		<band height="15" splitType="Stretch">
+			<textField pattern="dd/MM/yyyy">
+				<reportElement style="zebra" mode="Opaque" x="0" y="0" width="68" height="15"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression class="java.sql.Timestamp"><![CDATA[$F{DTNEG}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement style="zebra" mode="Opaque" x="68" y="0" width="71" height="15"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{NUMNOTA}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00">
+				<reportElement style="zebra" mode="Opaque" x="139" y="0" width="56" height="15"/>
+				<box rightPadding="5">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression class="java.lang.Double"><![CDATA[$F{VLRNOTA}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

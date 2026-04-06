@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ficha_produtos_grow" language="groovy" pageWidth="355" pageHeight="350" whenNoDataType="AllSectionsNoDetail" columnWidth="355" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0">
+	<property name="ireport.zoom" value="1.9487171000000019"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<style name="zebra">
+		<conditionalStyle>
+			<conditionExpression><![CDATA[$V{COLUMN_COUNT}%2==0]]></conditionExpression>
+			<style mode="Opaque" backcolor="#FFFFFF"/>
+		</conditionalStyle>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[$V{COLUMN_COUNT}%2!=0]]></conditionExpression>
+			<style mode="Opaque" backcolor="#CCCCCC"/>
+		</conditionalStyle>
+	</style>
+	<parameter name="CODPARC" class="java.math.BigDecimal">
+		<property name="nomeTabela" value="TGFPAR"/>
+		<parameterDescription><![CDATA[Cód. Parceiro]]></parameterDescription>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT *
+  FROM(
+    SELECT *
+      FROM(
+            SELECT 'MOTO ARTE' AS EMPRESA
+                 , SUB.CODPROD || ' - ' || SUB.DESCRPROD AS DESCRPROD
+                 , SUB.QTDNEG
+                 , MAX(TGFITE.VLRUNIT) AS VLRUNIT
+              FROM (
+            SELECT TGFPRO.CODPROD
+                 , TGFPRO.DESCRPROD
+                 , SUM(QTDNEG) AS QTDNEG
+                 , MAX(TGFITE.NUNOTA) AS NUNOTA
+               FROM MOTOPRD.TGFCAB
+               INNER JOIN MOTOPRD.TGFITE ON TGFITE.NUNOTA = TGFCAB.NUNOTA
+               INNER JOIN MOTOPRD.TGFPRO ON TGFPRO.CODPROD = TGFITE.CODPROD
+              WHERE TGFCAB.CODTIPOPER = 901
+                AND TGFCAB.CODPARC IN((SELECT CODARTE FROM TABLE(GROWPRD.AD_GET_PARCEIROS_ERP($P{CODPARC}))))
+                AND TGFCAB.STATUSNOTA = 'L'
+
+            GROUP BY  TGFPRO.CODPROD, TGFPRO.DESCRPROD
+            ORDER BY 3 DESC
+            FETCH NEXT 20 ROWS ONLY
+            ) SUB
+            INNER JOIN MOTOPRD.TGFITE ON TGFITE.NUNOTA = SUB.NUNOTA AND TGFITE.CODPROD = SUB.CODPROD
+            GROUP BY SUB.CODPROD || ' - ' || SUB.DESCRPROD
+                   , SUB.QTDNEG
+
+
+            UNION ALL
+
+            SELECT 'MOTO UAI' AS EMPRESA
+                 , SUB.CODPROD || ' - ' || SUB.DESCRPROD AS DESCRPROD
+                 , SUB.QTDNEG
+                 , MAX(TGFITE.VLRUNIT) AS VLRUNIT
+              FROM (
+            SELECT TGFPRO.CODPROD
+                 , TGFPRO.DESCRPROD
+                 , SUM(QTDNEG) AS QTDNEG
+                 , MAX(TGFITE.NUNOTA) AS NUNOTA
+               FROM RAJAPRD.TGFCAB
+               INNER JOIN RAJAPRD.TGFITE ON TGFITE.NUNOTA = TGFCAB.NUNOTA
+               INNER JOIN RAJAPRD.TGFPRO ON TGFPRO.CODPROD = TGFITE.CODPROD
+              WHERE TGFCAB.CODTIPOPER = 901
+                AND TGFCAB.CODPARC IN((SELECT CODUAI FROM TABLE(GROWPRD.AD_GET_PARCEIROS_ERP($P{CODPARC}))))
+                AND TGFCAB.STATUSNOTA = 'L'
+
+            GROUP BY  TGFPRO.CODPROD, TGFPRO.DESCRPROD
+            ORDER BY 3 DESC
+            FETCH NEXT 20 ROWS ONLY
+            ) SUB
+            INNER JOIN RAJAPRD.TGFITE ON TGFITE.NUNOTA = SUB.NUNOTA AND TGFITE.CODPROD = SUB.CODPROD
+            GROUP BY SUB.CODPROD || ' - ' || SUB.DESCRPROD
+                   , SUB.QTDNEG
+
+
+            UNION ALL
+
+            SELECT 'MOTO FEST' AS EMPRESA
+                 , SUB.CODPROD || ' - ' || SUB.DESCRPROD AS DESCRPROD
+                 , SUB.QTDNEG
+                 , MAX(ITE.VLRUNIT) AS VLRUNIT
+              FROM(
+                SELECT PRO.CODPROD
+                     , PRO.DESCRPROD
+                     , SUM(QTDNEG) AS QTDNEG
+                     , MAX(ITE.NUNOTA) AS NUNOTA
+                  FROM GROWPRD.TGFCAB CAB
+                  INNER JOIN GROWPRD.TGFITE ITE ON CAB.NUNOTA = ITE.NUNOTA
+                  INNER JOIN GROWPRD.TGFPRO PRO ON PRO.CODPROD = ITE.CODPROD
+                 WHERE CAB.CODEMP = 50
+                   AND CAB.CODPARC = $P{CODPARC}
+
+                GROUP BY  PRO.CODPROD, PRO.DESCRPROD
+                ORDER BY 3 DESC
+                FETCH NEXT 20 ROWS ONLY
+            ) SUB
+            INNER JOIN GROWPRD.TGFITE ITE ON ITE.NUNOTA = SUB.NUNOTA AND ITE.CODPROD = SUB.CODPROD
+            GROUP BY SUB.CODPROD || ' - ' || SUB.DESCRPROD
+                   , SUB.QTDNEG
+
+    )ORDER BY QTDNEG DESC
+    FETCH NEXT 20 ROW ONLY
+)SUB2
+ORDER BY EMPRESA, QTDNEG DESC]]>
+	</queryString>
+	<field name="EMPRESA" class="java.lang.String"/>
+	<field name="DESCRPROD" class="java.lang.String"/>
+	<field name="QTDNEG" class="java.math.BigDecimal"/>
+	<field name="VLRUNIT" class="java.math.BigDecimal"/>
+	<group name="EMPRESA">
+		<groupExpression><![CDATA[$F{EMPRESA}]]></groupExpression>
+		<groupHeader>
+			<band height="26">
+				<staticText>
+					<reportElement x="0" y="13" width="253" height="13"/>
+					<box leftPadding="5">
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Produto]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="253" y="13" width="28" height="13"/>
+					<box rightPadding="5">
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Qtd.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="281" y="13" width="74" height="13"/>
+					<box rightPadding="0">
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="8" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Ult. Vlr. Compra]]></text>
+				</staticText>
+				<textField>
+					<reportElement mode="Opaque" x="0" y="0" width="355" height="13" backcolor="#CCCCCC"/>
+					<box leftPadding="0">
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<textFieldExpression class="java.lang.String"><![CDATA[$F{EMPRESA}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+	</group>
+	<title>
+		<band height="20" splitType="Stretch">
+			<staticText>
+				<reportElement mode="Opaque" x="0" y="7" width="355" height="13" forecolor="#FFFFFF" backcolor="#666666"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Produtos mais Comprados]]></text>
+			</staticText>
+		</band>
+	</title>
+	<detail>
+		<band height="15" splitType="Stretch">
+			<textField>
+				<reportElement style="zebra" x="0" y="0" width="253" height="15"/>
+				<box leftPadding="5">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{DESCRPROD}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement style="zebra" x="253" y="0" width="28" height="15"/>
+				<box rightPadding="5">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{QTDNEG}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement style="zebra" x="281" y="0" width="74" height="15"/>
+				<box rightPadding="5">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{VLRUNIT}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

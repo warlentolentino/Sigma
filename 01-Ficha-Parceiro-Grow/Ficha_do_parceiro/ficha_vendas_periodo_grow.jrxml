@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ficha_Vendas_Periodo_grow" language="groovy" pageWidth="555" pageHeight="260" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0">
+	<property name="ireport.zoom" value="1.2100000000000006"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="CODPARC" class="java.math.BigDecimal">
+		<parameterDescription><![CDATA[Cód. Parceiro]]></parameterDescription>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT *
+  FROM (
+    SELECT MES
+         , ANO
+         , ANO_MES
+         , SUM(VLRFATUR) AS VLRFATUR
+     FROM(
+            SELECT EXTRACT(MONTH FROM TGFCAB.DTFATUR) AS MES
+                 , EXTRACT(YEAR FROM TGFCAB.DTFATUR) AS ANO
+                 , RTRIM(LTRIM(SUBSTR(TO_CHAR(TGFCAB.DTFATUR,'MONTH'),0,3))) ||'/' ||EXTRACT(YEAR FROM TGFCAB.DTFATUR) AS ANO_MES
+                 , TGFCAB.VLRNOTA AS VLRFATUR
+             FROM MOTOPRD.TGFCAB
+             WHERE TGFCAB.CODTIPOPER = 901
+                AND TGFCAB.STATUSNOTA = 'L'
+                AND TGFCAB.CODPARC IN ((SELECT CODARTE FROM TABLE(GROWPRD.AD_GET_PARCEIROS_ERP($P{CODPARC}))))
+
+
+            UNION ALL
+
+            SELECT EXTRACT(MONTH FROM TGFCAB.DTFATUR) AS MES
+                 , EXTRACT(YEAR FROM TGFCAB.DTFATUR) AS ANO
+                 , RTRIM(LTRIM(SUBSTR(TO_CHAR(TGFCAB.DTFATUR,'MONTH'),0,3))) ||'/' ||EXTRACT(YEAR FROM TGFCAB.DTFATUR) AS ANO_MES
+                 , TGFCAB.VLRNOTA AS VLRFATUR
+             FROM RAJAPRD.TGFCAB
+             WHERE TGFCAB.CODTIPOPER = 901
+                AND TGFCAB.STATUSNOTA = 'L'
+                AND TGFCAB.CODPARC IN ((SELECT CODUAI FROM TABLE(GROWPRD.AD_GET_PARCEIROS_ERP($P{CODPARC}))))
+
+
+
+            UNION ALL
+
+            SELECT EXTRACT(MONTH FROM TGFCAB.DTNEG) AS MES
+                 , EXTRACT(YEAR FROM TGFCAB.DTNEG) AS ANO
+                 , RTRIM(LTRIM(SUBSTR(TO_CHAR(TGFCAB.DTNEG,'MONTH'),0,3))) ||'/' ||EXTRACT(YEAR FROM TGFCAB.DTNEG) AS ANO_MES
+                 , TGFCAB.VLRNOTA AS VLRFATUR
+             FROM GROWPRD.TGFCAB
+             WHERE TGFCAB.NUPEDFEST IS NOT NULL
+               AND TGFCAB.CODEMP = 50
+               AND TGFCAB.CODPARC = $P{CODPARC}
+    )SUB
+    GROUP BY MES
+            ,ANO
+            ,ANO_MES
+    ORDER BY 2 DESC
+    FETCH FIRST 12 ROWS ONLY
+)DADOS
+ORDER BY 2,1]]>
+	</queryString>
+	<field name="MES" class="java.math.BigDecimal"/>
+	<field name="ANO" class="java.math.BigDecimal"/>
+	<field name="ANO_MES" class="java.lang.String"/>
+	<field name="VLRFATUR" class="java.math.BigDecimal"/>
+	<title>
+		<band height="20">
+			<staticText>
+				<reportElement mode="Opaque" x="0" y="0" width="555" height="20" forecolor="#FFFFFF" backcolor="#666666"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Compras no Período]]></text>
+			</staticText>
+		</band>
+	</title>
+	<summary>
+		<band height="240">
+			<barChart>
+				<chart isShowLegend="false">
+					<reportElement x="0" y="0" width="555" height="240"/>
+					<chartTitle>
+						<font size="7"/>
+					</chartTitle>
+					<chartSubtitle>
+						<font size="7"/>
+					</chartSubtitle>
+					<chartLegend>
+						<font size="6"/>
+					</chartLegend>
+				</chart>
+				<categoryDataset>
+					<categorySeries>
+						<seriesExpression><![CDATA["Dummy Series"]]></seriesExpression>
+						<categoryExpression><![CDATA[$F{ANO_MES}]]></categoryExpression>
+						<valueExpression><![CDATA[$F{VLRFATUR}]]></valueExpression>
+					</categorySeries>
+				</categoryDataset>
+				<barPlot isShowLabels="true" isShowTickLabels="true" isShowTickMarks="false">
+					<plot labelRotation="-20.0">
+						<seriesColor seriesOrder="0" color="#00CC99"/>
+					</plot>
+					<itemLabel color="#000000" backgroundColor="#FFFFFF">
+						<font size="8"/>
+					</itemLabel>
+					<categoryAxisFormat labelRotation="-20.0">
+						<axisFormat verticalTickLabels="false">
+							<labelFont>
+								<font size="8"/>
+							</labelFont>
+							<tickLabelFont>
+								<font size="8"/>
+							</tickLabelFont>
+						</axisFormat>
+					</categoryAxisFormat>
+					<valueAxisFormat>
+						<axisFormat verticalTickLabels="false">
+							<labelFont>
+								<font size="8"/>
+							</labelFont>
+							<tickLabelFont>
+								<font size="8"/>
+							</tickLabelFont>
+						</axisFormat>
+					</valueAxisFormat>
+				</barPlot>
+			</barChart>
+		</band>
+	</summary>
+</jasperReport>

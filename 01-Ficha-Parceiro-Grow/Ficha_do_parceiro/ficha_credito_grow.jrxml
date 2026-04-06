@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ficha_credito_grow" language="groovy" pageWidth="555" pageHeight="100" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" isIgnorePagination="true">
+	<property name="ireport.zoom" value="1.331000000000001"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<parameter name="CODPARC" class="java.math.BigDecimal">
+		<parameterDescription><![CDATA[Cód. Parceiro]]></parameterDescription>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT '9 - MOTO ARTE' AS EMPRESA
+        , PAR.CODPARC
+        , PAR.NOMEPARC
+        , FIN.DTNEG
+        , FIN.VLRLIQUIDO
+   FROM MOTOPRD.VGFFIN FIN
+   INNER JOIN MOTOPRD.TGFPAR PAR ON PAR.CODPARC = FIN.CODPARC
+  WHERE FIN.CODTIPTIT = 52
+   AND FIN.RECDESP = -1
+   AND FIN.DHBAIXA IS NULL
+   AND FIN.CODEMP = 9
+   AND FIN.CODPARC IN ((SELECT CODARTE FROM TABLE(AD_GET_PARCEIROS_ERP($P{CODPARC}))))
+
+UNION ALL
+
+  SELECT '1 - MOTO UAI' AS EMPRESA
+        , PAR.CODPARC
+        , PAR.NOMEPARC
+        , FIN.DTNEG
+        , FIN.VLRLIQUIDO
+   FROM RAJAPRD.VGFFIN FIN
+   INNER JOIN RAJAPRD.TGFPAR PAR ON PAR.CODPARC = FIN.CODPARC
+  WHERE FIN.CODTIPTIT = 52
+   AND FIN.RECDESP = -1
+   AND FIN.DHBAIXA IS NULL
+   AND FIN.CODEMP = 1
+   AND FIN.CODPARC IN ((SELECT CODUAI FROM TABLE(AD_GET_PARCEIROS_ERP($P{CODPARC}))))
+
+
+UNION ALL
+
+  SELECT '50 - MOTO FEST' AS EMPRESA
+        , PAR.CODFEST AS CODPARC
+        , PAR.NOMEPARC
+        , FIN.DTNEG
+        , FIN.VALOR AS VLRLIQUIDO
+      FROM GROWPRD.TGFFIN FIN
+      INNER JOIN GROWPRD.TGFPAR PAR ON PAR.CODPARC = FIN.CODPARC
+      WHERE FIN.CREDCLIENTE = 'S'
+        AND FIN.CODPARC = $P{CODPARC}
+        AND NVL(FIN.CONTABANCARIA,' ') <> 'MATRIZ - CAIXA  AUXILIAR'
+ORDER BY 1,4]]>
+	</queryString>
+	<field name="EMPRESA" class="java.lang.String"/>
+	<field name="CODPARC" class="java.math.BigDecimal"/>
+	<field name="NOMEPARC" class="java.lang.String"/>
+	<field name="DTNEG" class="java.sql.Timestamp"/>
+	<field name="VLRLIQUIDO" class="java.lang.Double"/>
+	<title>
+		<band height="20" splitType="Stretch">
+			<staticText>
+				<reportElement mode="Opaque" x="0" y="0" width="555" height="20" forecolor="#FFFFFF" backcolor="#666666"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="10" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Crédito Cliente]]></text>
+			</staticText>
+		</band>
+	</title>
+	<columnHeader>
+		<band height="15" splitType="Stretch">
+			<staticText>
+				<reportElement x="158" y="0" width="79" height="15"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Cód. Parc. ERP]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="491" y="0" width="64" height="15"/>
+				<box rightPadding="5">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Vlr. Crédito]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="0" width="76" height="15"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Empresa]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="76" y="0" width="82" height="15"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Dt. Emissão]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="237" y="0" width="254" height="15"/>
+				<box leftPadding="3">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="9" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Parceiro]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="15" splitType="Stretch">
+			<textField isBlankWhenNull="true">
+				<reportElement mode="Transparent" x="158" y="0" width="79" height="15" forecolor="#009900"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression class="java.math.BigDecimal"><![CDATA[$F{CODPARC}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00" isBlankWhenNull="true">
+				<reportElement mode="Transparent" x="491" y="0" width="64" height="15" forecolor="#009900"/>
+				<box rightPadding="5">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression class="java.lang.Double"><![CDATA[$F{VLRLIQUIDO}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd/MM/yyyy" isBlankWhenNull="true">
+				<reportElement mode="Transparent" x="76" y="0" width="82" height="15" forecolor="#009900"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression class="java.sql.Timestamp"><![CDATA[$F{DTNEG}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement mode="Transparent" x="0" y="0" width="76" height="15" forecolor="#009900"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{EMPRESA}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="237" y="0" width="254" height="15" forecolor="#009900"/>
+				<box leftPadding="3">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression class="java.lang.String"><![CDATA[$F{NOMEPARC}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>
