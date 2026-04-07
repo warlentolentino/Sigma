@@ -13,6 +13,18 @@ const App = {
 };
 
 // ---- Utilitários ----
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
 function getBaseUrl() {
     if (typeof CONFIG === 'undefined') {
         showToast('error', 'Arquivo config.js não encontrado. Veja config.example.js para instruções.');
@@ -298,33 +310,45 @@ function parseXmlDbExplorer(xmlDoc) {
 
 // ---- BUSCA DE PARCEIRO ----
 async function searchPartner() {
-    const searchType = document.getElementById('search-type').value;
     const searchValue = document.getElementById('search-value').value.trim();
 
     if (!searchValue) {
-        showToast('warning', 'Digite um valor para pesquisar.');
+        clearResults();
         return;
     }
 
     if (!App.isLoggedIn) {
-        showToast('warning', 'Conecte-se ao Sankhya antes de pesquisar.');
+        showToast('warning', 'Conecte-se antes de pesquisar.');
         return;
     }
 
-    // Monta o WHERE conforme o tipo de pesquisa
+    // Busca Inteligente: Identifica se é número, nome ou documento
     let whereClause = '';
-    switch (searchType) {
-        case 'CODPARC':
-            whereClause = `PAR.CODPARC = ${parseInt(searchValue)}`;
-            break;
-        case 'NOMEPARC':
-            whereClause = `PAR.NOMEPARC LIKE '%${searchValue.toUpperCase()}%'`;
-            break;
-        case 'CGC_CPF':
-            whereClause = `PAR.CGC_CPF LIKE '%${searchValue.replace(/\D/g, '')}%'`;
-            break;
-        default:
-            whereClause = `PAR.CODPARC = ${parseInt(searchValue)}`;
+
+    if (searchValue.startsWith('#')) {
+        // Busca explícita por código do parceiro (ex: #6715)
+        const code = parseInt(searchValue.substring(1));
+        if (!isNaN(code)) {
+            whereClause = `PAR.CODPARC = ${code}`;
+        } else {
+            clearResults();
+            return;
+        }
+    } else {
+        const isOnlyNumbers = /^\d+$/.test(searchValue);
+
+        if (isOnlyNumbers && searchValue.length <= 6) {
+            // Provável código
+            whereClause = `(PAR.CODPARC = ${parseInt(searchValue)} OR PAR.CGCCPF LIKE '${searchValue}%')`;
+        } else {
+            // Provável Nome ou CPF/CNPJ
+            const cleanDoc = searchValue.replace(/\D/g, '');
+            if (cleanDoc.length >= 11) {
+                whereClause = `PAR.CGCCPF LIKE '${cleanDoc}%'`;
+            } else {
+                whereClause = `(PAR.NOMEPARC LIKE '%${searchValue.toUpperCase()}%' OR CAST(PAR.CODPARC AS VARCHAR2(20)) LIKE '%${searchValue}%')`;
+            }
+        }
     }
 
     const sql = `
@@ -467,11 +491,9 @@ function renderResults(data) {
 // ---- Helpers de UI ----
 function enableSearch(enabled) {
     const searchValue = document.getElementById('search-value');
-    const searchType = document.getElementById('search-type');
     const btnSearch = document.getElementById('btn-search');
 
     searchValue.disabled = !enabled;
-    searchType.disabled = !enabled;
     btnSearch.disabled = !enabled;
 
     if (enabled) {
@@ -498,7 +520,7 @@ function clearResults() {
         <div class="empty-state">
             <div class="empty-state-icon">🔍</div>
             <h3 class="empty-state-title">Pesquise um parceiro</h3>
-            <p class="empty-state-description">Conecte-se ao Sankhya e utilize a barra de pesquisa para buscar dados de parceiros.</p>
+            <p class="empty-state-description">Conecte-se ao Grow e utilize a barra de pesquisa para buscar dados de parceiros.</p>
         </div>
     `;
     countEl.innerHTML = '';
@@ -550,31 +572,33 @@ document.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const urlCodParc = urlParams.get('codparc');
         if (urlCodParc) {
-            const typeEl = document.getElementById('search-type');
             const valEl = document.getElementById('search-value');
-            if (typeEl && valEl) {
-                typeEl.value = 'CODPARC';
+            if (valEl) {
                 valEl.value = urlCodParc;
                 // Dispara a pesquisa e já abre o card após renderizar
                 searchPartner().then(() => {
                     // Timeout pequeno para garantir a injeção no DOM do card HTML
                     setTimeout(() => {
                         const firstCard = document.querySelector('.data-card');
-                        if (firstCard) {
-                            firstCard.click();
-                        }
-                    }, 100);
+                        if (firstCard) firstCard.click();
+                    }, 200);
                 });
             }
         }
     });
 
-    // Enter na pesquisa
+    // Busca dinâmica com debounce (500ms)
     const searchInput = document.getElementById('search-value');
     if (searchInput) {
+        const dynamicSearch = debounce(() => {
+            searchPartner();
+        }, 500);
+
+        searchInput.addEventListener('input', dynamicSearch);
+
         searchInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
-                searchPartner();
+                searchPartner(); // Busca imediata no Enter
             }
         });
     }

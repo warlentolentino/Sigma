@@ -34,11 +34,11 @@
                 <div class="header-logo">G</div>
                 <div>
                     <h1 class="header-title">Grow</h1>
-                    <p class="header-subtitle">Ficha de Parceiro — Sankhya</p>
+                    <p class="header-subtitle">Ficha de Parceiro — Grow</p>
                 </div>
             </div>
 
-            <div class="header-actions">
+            <div class="header-actions" style="display: none;">
                 <div id="status-badge" class="status-badge offline">
                     <span id="status-dot" class="status-dot"></span>
                     <span id="status-text">Desconectado</span>
@@ -58,18 +58,9 @@
         <section class="search-section" id="search-section">
             <div class="search-section-title">🔎 Pesquisa de Parceiro</div>
             <div class="search-row">
-                <div class="search-field" style="max-width: 200px;">
-                    <label for="search-type">Pesquisar por</label>
-                    <select id="search-type" disabled>
-                        <option value="CODPARC">Código</option>
-                        <option value="NOMEPARC" selected>Nome / Razão Social</option>
-                        <option value="CGC_CPF">CPF / CNPJ</option>
-                    </select>
-                </div>
-
-                <div class="search-field">
-                    <label for="search-value">Valor da pesquisa</label>
-                    <input type="text" id="search-value" placeholder="Digite o código, nome ou documento..." disabled
+                <div class="search-field" style="flex: 1;">
+                    <label for="search-value">Pesquisar Parceiro</label>
+                    <input type="text" id="search-value" placeholder="Digite código, nome ou CPF/CNPJ..." disabled
                         autocomplete="off">
                 </div>
 
@@ -91,7 +82,7 @@
                     <div class="empty-state-icon">🔍</div>
                     <h3 class="empty-state-title">Pesquise um parceiro</h3>
                     <p class="empty-state-description">
-                        Conecte-se ao Sankhya e utilize a barra de pesquisa para buscar dados de parceiros.
+                        Conecte-se ao Grow e utilize a barra de pesquisa para buscar dados de parceiros.
                     </p>
                 </div>
             </div>
@@ -99,103 +90,110 @@
 
     </div>
 
-        <!-- ====== MODAL DA FICHA DETALHADA ====== -->
-        <div id="ficha-modal" class="modal-overlay" style="display: none;">
-            <div class="modal-content expanded-panel">
-                <div class="modal-header">
-                    <div class="modal-title-group">
-                        <h2 id="modal-partner-name">Nome do Parceiro</h2>
-                        <span id="modal-partner-cod" class="badge">#</span>
-                        <div id="ficha-loader" class="ficha-loader" style="display:none;"><span class="spinner"></span> Carregando...</div>
-                    </div>
-                    <button class="btn-close" onclick="closeFichaModal()">✕</button>
+    <!-- ====== MODAL DA FICHA DETALHADA ====== -->
+    <div id="ficha-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content expanded-panel">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <h2 id="modal-partner-name">Nome do Parceiro</h2>
+                    <span id="modal-partner-cod" class="badge">#</span>
+                    <div id="ficha-loader" class="ficha-loader" style="display:none;"><span class="spinner"></span>
+                        Carregando...</div>
                 </div>
-                
-                <!-- Abas -->
-                <div class="tabs-nav">
-                    <button class="tab-btn active" onclick="switchTab('tab-geral')">Geral</button>
-                    <button class="tab-btn" onclick="switchTab('tab-credito')">Crédito & Vinculados</button>
-                    <button class="tab-btn" onclick="switchTab('tab-financeiro')">Títulos Financeiros</button>
-                    <button class="tab-btn" onclick="switchTab('tab-notas')">Notas Fiscais</button>
-                    <button class="tab-btn" onclick="switchTab('tab-produtos')">Produtos</button>
-                    <button class="tab-btn" onclick="switchTab('tab-graficos')">Vendas Período</button>
-                </div>
+                <button class="btn-close" onclick="closeFichaModal()">✕</button>
+            </div>
 
-                <!-- Conteúdos das Abas -->
-                <div class="modal-body">
-                    <!-- Tab Geral -->
-                    <div id="tab-geral" class="tab-content active">
-                        <div class="dashboard-grid">
-                            <div class="dash-card col-span-2">
-                                <h3>Resumo de Títulos</h3>
-                                <div id="geral-titulos" class="dados-complementares-grid"></div>
-                            </div>
-                            <div class="dash-card">
-                                <h3>Limites & PCLD</h3>
-                                <div id="geral-limites" class="geral-info-list"></div>
-                            </div>
-                            <div class="dash-card">
-                                <h3>Situação SPC</h3>
-                                <div id="geral-spc">Sem Dados</div>
-                            </div>
-                            <div class="dash-card col-span-2">
-                                <h3>Dados Complementares</h3>
-                                <div id="geral-dados" class="dados-complementares-grid"></div>
-                            </div>
+            <!-- Abas -->
+            <div class="tabs-nav">
+                <button class="tab-btn active" onclick="switchTab('tab-geral')">Geral</button>
+                <button class="tab-btn" onclick="switchTab('tab-credito')">Crédito & Vinculados</button>
+                <button class="tab-btn" onclick="switchTab('tab-financeiro')">Títulos Financeiros</button>
+                <button class="tab-btn" onclick="switchTab('tab-notas')">Notas Fiscais</button>
+                <button class="tab-btn" onclick="switchTab('tab-produtos')">Produtos</button>
+                <button class="tab-btn" onclick="switchTab('tab-graficos')">Vendas Período</button>
+            </div>
+
+            <!-- Conteúdos das Abas -->
+            <div class="modal-body">
+                <!-- Tab Geral -->
+                <div id="tab-geral" class="tab-content active">
+                    <div class="dashboard-grid">
+                        <div class="dash-card col-span-2">
+                            <h3>Resumo de Títulos</h3>
+                            <div id="geral-titulos" class="dados-complementares-grid"></div>
+                        </div>
+                        <div class="dash-card">
+                            <h3>Limites & PCLD</h3>
+                            <div id="geral-limites" class="geral-info-list"></div>
+                        </div>
+                        <div class="dash-card">
+                            <h3>Situação SPC</h3>
+                            <div id="geral-spc">Sem Dados</div>
+                        </div>
+                        <div class="dash-card col-span-2">
+                            <h3>Dados Complementares</h3>
+                            <div id="geral-dados" class="dados-complementares-grid"></div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Tab Crédito & Vinculados -->
-                    <div id="tab-credito" class="tab-content">
-                         <div class="grid-header-row">
-                             <h3>Crédito Cliente</h3>
-                             <input type="text" class="grid-search-input" placeholder="Pesquisar em Crédito..." oninput="filterGrid('grid-credito', this.value)">
-                         </div>
-                         <div id="grid-credito" class="ag-theme-quartz grid-container"></div>
-                         
-                         <div class="grid-header-row" style="margin-top:20px;">
-                             <h3>Parceiros Vinculados</h3>
-                             <input type="text" class="grid-search-input" placeholder="Pesquisar em Vinculados..." oninput="filterGrid('grid-vinculados', this.value)">
-                         </div>
-                         <div id="grid-vinculados" class="ag-theme-quartz grid-container"></div>
+                <!-- Tab Crédito & Vinculados -->
+                <div id="tab-credito" class="tab-content">
+                    <div class="grid-header-row">
+                        <h3>Crédito Cliente</h3>
+                        <input type="text" class="grid-search-input" placeholder="Pesquisar em Crédito..."
+                            oninput="filterGrid('grid-credito', this.value)">
                     </div>
+                    <div id="grid-credito" class="ag-theme-quartz grid-container"></div>
 
-                    <!-- Tab Financeiro -->
-                    <div id="tab-financeiro" class="tab-content">
-                         <div class="grid-header-row">
-                             <h3 style="display:none;">Títulos Financeiros</h3>
-                             <input type="text" class="grid-search-input" style="width: 100%;" placeholder="Pesquisar títulos financeiros..." oninput="filterGrid('grid-financeiro', this.value)">
-                         </div>
-                         <div id="grid-financeiro" class="ag-theme-quartz grid-container-large"></div>
+                    <div class="grid-header-row" style="margin-top:20px;">
+                        <h3>Parceiros Vinculados</h3>
+                        <input type="text" class="grid-search-input" placeholder="Pesquisar em Vinculados..."
+                            oninput="filterGrid('grid-vinculados', this.value)">
                     </div>
+                    <div id="grid-vinculados" class="ag-theme-quartz grid-container"></div>
+                </div>
 
-                    <!-- Tab Notas -->
-                    <div id="tab-notas" class="tab-content">
-                         <div class="grid-header-row">
-                             <h3 style="display:none;">Notas</h3>
-                             <input type="text" class="grid-search-input" style="width: 100%;" placeholder="Pesquisar em notas..." oninput="filterGrid('grid-notas', this.value)">
-                         </div>
-                         <div id="grid-notas" class="ag-theme-quartz grid-container-large"></div>
+                <!-- Tab Financeiro -->
+                <div id="tab-financeiro" class="tab-content">
+                    <div class="grid-header-row">
+                        <h3 style="display:none;">Títulos Financeiros</h3>
+                        <input type="text" class="grid-search-input" style="width: 100%;"
+                            placeholder="Pesquisar títulos financeiros..."
+                            oninput="filterGrid('grid-financeiro', this.value)">
                     </div>
+                    <div id="grid-financeiro" class="ag-theme-quartz grid-container-large"></div>
+                </div>
 
-                    <!-- Tab Produtos -->
-                    <div id="tab-produtos" class="tab-content">
-                         <div class="grid-header-row">
-                             <h3 style="display:none;">Produtos</h3>
-                             <input type="text" class="grid-search-input" style="width: 100%;" placeholder="Pesquisar em produtos..." oninput="filterGrid('grid-produtos', this.value)">
-                         </div>
-                         <div id="grid-produtos" class="ag-theme-quartz grid-container-large"></div>
+                <!-- Tab Notas -->
+                <div id="tab-notas" class="tab-content">
+                    <div class="grid-header-row">
+                        <h3 style="display:none;">Notas</h3>
+                        <input type="text" class="grid-search-input" style="width: 100%;"
+                            placeholder="Pesquisar em notas..." oninput="filterGrid('grid-notas', this.value)">
                     </div>
+                    <div id="grid-notas" class="ag-theme-quartz grid-container-large"></div>
+                </div>
 
-                    <!-- Tab Gráficos -->
-                    <div id="tab-graficos" class="tab-content">
-                         <div class="chart-container">
-                             <canvas id="vendasChart"></canvas>
-                         </div>
+                <!-- Tab Produtos -->
+                <div id="tab-produtos" class="tab-content">
+                    <div class="grid-header-row">
+                        <h3 style="display:none;">Produtos</h3>
+                        <input type="text" class="grid-search-input" style="width: 100%;"
+                            placeholder="Pesquisar em produtos..." oninput="filterGrid('grid-produtos', this.value)">
+                    </div>
+                    <div id="grid-produtos" class="ag-theme-quartz grid-container-large"></div>
+                </div>
+
+                <!-- Tab Gráficos -->
+                <div id="tab-graficos" class="tab-content">
+                    <div class="chart-container">
+                        <canvas id="vendasChart"></canvas>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
     <!-- Scripts: config DEVE vir antes do app -->
     <script src="js/config.js"></script>

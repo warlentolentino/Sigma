@@ -2,6 +2,7 @@
 let currentPartnerId = null;
 let agGrids = {};
 let vendasChartInstance = null;
+let loadedTabs = new Set(); // Controle de abas já carregas para o parceiro atual
 
 // Normalizer
 function normalizeSankhyaRows(result) {
@@ -36,13 +37,40 @@ function normalizeSankhyaRows(result) {
 // Handlers UI
 async function openFichaModal(codparc, nomeparc) {
     currentPartnerId = codparc;
+    loadedTabs.clear(); // Reseta estado de abas
+    
     document.getElementById('modal-partner-name').textContent = nomeparc;
     document.getElementById('modal-partner-cod').textContent = '#' + codparc;
+    
+    clearFichaUI(); // Limpa dados antigos antes de exibir
+    
     document.getElementById('ficha-modal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
 
     switchTab('tab-geral');
     await loadFichaData(codparc);
+}
+
+function clearFichaUI() {
+    // 1. Limpa Campos da Aba Geral
+    document.getElementById('geral-spc').textContent = 'Carregando...';
+    document.getElementById('geral-spc').className = 'spc-status';
+    document.getElementById('geral-limites').innerHTML = '<div class="loading-placeholder">...</div>';
+    document.getElementById('geral-dados').innerHTML = '<div class="loading-placeholder">...</div>';
+    document.getElementById('geral-titulos').innerHTML = '<div class="loading-placeholder">...</div>';
+
+    // 2. Limpa Grids
+    Object.keys(agGrids).forEach(gridId => {
+        if (agGrids[gridId]) {
+            agGrids[gridId].setGridOption('rowData', []);
+        }
+    });
+
+    // 3. Limpa Gráfico
+    if (vendasChartInstance) {
+        vendasChartInstance.destroy();
+        vendasChartInstance = null;
+    }
 }
 
 function closeFichaModal() {
@@ -60,6 +88,11 @@ function switchTab(tabId) {
 
     const tab = document.getElementById(tabId);
     if (tab) tab.classList.add('active');
+
+    // Carregamento Lazy
+    if (!loadedTabs.has(tabId)) {
+        loadTabData(tabId);
+    }
 }
 
 // CORE FETCH
@@ -68,34 +101,55 @@ async function loadFichaData(codparc) {
     loader.style.display = 'flex';
 
     try {
-        const [
-            resGeral,
-            resCredito,
-            resFinanc,
-            resNotasProd,
-            resProdutos,
-            resVendas,
-            resVinc
-        ] = await Promise.allSettled([
-            executeQuery(Queries.getFichaPrincipal(codparc)),
-            executeQuery(Queries.getFichaCredito(codparc)),
-            executeQuery(Queries.getFichaFinanceiros(codparc)),
-            executeQuery(Queries.getFichaNotasProdutos(codparc)),
-            executeQuery(Queries.getFichaProdutos(codparc)),
-            executeQuery(Queries.getFichaVendasPeriodo(codparc)),
-            executeQuery(Queries.getFichaVinculados(codparc))
-        ]);
-
-        if (resGeral.status === 'fulfilled') renderTabGeral(normalizeSankhyaRows(resGeral.value));
-        if (resCredito.status === 'fulfilled' && resVinc.status === 'fulfilled') {
-            renderTabCredito(normalizeSankhyaRows(resCredito.value), normalizeSankhyaRows(resVinc.value));
+        // Carrega APENAS a aba inicial (Geral) obrigatoriamente
+        const resGeral = await executeQuery(Queries.getFichaPrincipal(codparc));
+        if (resGeral) {
+            renderTabGeral(normalizeSankhyaRows(resGeral));
+            loadedTabs.add('tab-geral');
         }
-        if (resFinanc.status === 'fulfilled') renderTabFinanceiro(normalizeSankhyaRows(resFinanc.value));
-        if (resNotasProd.status === 'fulfilled') renderTabNotas(normalizeSankhyaRows(resNotasProd.value));
-        if (resProdutos.status === 'fulfilled') renderTabProdutos(normalizeSankhyaRows(resProdutos.value));
-        if (resVendas.status === 'fulfilled') renderTabGraficos(normalizeSankhyaRows(resVendas.value));
     } catch (e) {
-        console.error("Erro no load de dados da Ficha", e);
+        console.error("Erro no load inicial (Geral)", e);
+    } finally {
+        loader.style.display = 'none';
+    }
+}
+
+async function loadTabData(tabId) {
+    if (!currentPartnerId || loadedTabs.has(tabId)) return;
+    
+    const loader = document.getElementById('ficha-loader');
+    loader.style.display = 'flex';
+
+    try {
+        let result;
+        switch(tabId) {
+            case 'tab-credito':
+                const [resCred, resVinc] = await Promise.all([
+                    executeQuery(Queries.getFichaCredito(currentPartnerId)),
+                    executeQuery(Queries.getFichaVinculados(currentPartnerId))
+                ]);
+                renderTabCredito(normalizeSankhyaRows(resCred), normalizeSankhyaRows(resVinc));
+                break;
+            case 'tab-financeiro':
+                result = await executeQuery(Queries.getFichaFinanceiros(currentPartnerId));
+                renderTabFinanceiro(normalizeSankhyaRows(result));
+                break;
+            case 'tab-notas':
+                result = await executeQuery(Queries.getFichaNotasProdutos(currentPartnerId));
+                renderTabNotas(normalizeSankhyaRows(result));
+                break;
+            case 'tab-produtos':
+                result = await executeQuery(Queries.getFichaProdutos(currentPartnerId));
+                renderTabProdutos(normalizeSankhyaRows(result));
+                break;
+            case 'tab-graficos':
+                result = await executeQuery(Queries.getFichaVendasPeriodo(currentPartnerId));
+                renderTabGraficos(normalizeSankhyaRows(result));
+                break;
+        }
+        loadedTabs.add(tabId);
+    } catch (e) {
+        console.error(`Erro ao carregar aba ${tabId}`, e);
     } finally {
         loader.style.display = 'none';
     }
